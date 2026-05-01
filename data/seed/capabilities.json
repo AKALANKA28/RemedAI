@@ -1,0 +1,100 @@
+{
+  "capabilities": [
+    {
+      "name": "Groundwater telemetry integration",
+      "category": "technical",
+      "tags": ["scada", "telemetry", "groundwater", "sensor integration"],
+      "evidence": "Delivered SCADA-linked groundwater monitoring for Kaduwela landfill rehabilitation in 2024.",
+      "owner": "Technical Lead"
+    },
+    {
+      "name": "Hazardous soil excavation supervision",
+      "category": "technical",
+      "tags": ["hazardous waste", "excavation", "remediation", "soil handling"],
+      "evidence": "Supervised controlled excavation and chain-of-custody documentation for North Port fuel depot spill response.",
+      "owner": "Remediation Manager"
+    },
+    {
+      "name": "Laboratory sample chain of custody",
+      "category": "quality",
+      "tags": ["sample handling", "chain of custody", "laboratory", "qa"],
+      "evidence": "ISO-aligned chain-of-custody workflow used across 11 groundwater programmes.",
+      "owner": "QA Lead"
+    },
+    {
+      "name": "Rapid mobilization field team",
+      "category": "operations",
+      "tags": ["mobilization", "field team", "site deployment", "14 days"],
+      "evidence": "Average mobilization time across last 6 field projects: 11 days.",
+      "owner": "Operations Manager"
+    },
+    {
+      "name": "Emergency response standby roster",
+      "category": "operations",
+      "tags": ["24x7", "emergency response", "incident callout", "standby"],
+      "evidence": "Currently available only through ad-hoc subcontractor arrangement; no active roster this quarter.",
+      "owner": "Operations Manager"
+    },
+    {
+      "name": "Drone and airborne mapping support",
+      "category": "technical",
+      "tags": ["drone mapping", "lidar", "site mapping", "airborne survey"],
+      "evidence": "Past drone work done through SkyGrid Analytics partnership; framework agreement expired.",
+      "owner": "Technical Lead"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "ISO 14001:2015",
+      "tags": ["iso 14001", "environmental management"],
+      "valid_until": "2027-08-31"
+    },
+    {
+      "name": "ISO 9001:2015",
+      "tags": ["iso 9001", "quality management"],
+      "valid_until": "2027-08-31"
+    }
+  ],
+  "past_projects": [
+    {
+      "name": "Kaduwela landfill rehabilitation telemetry package",
+      "tags": ["groundwater monitoring", "telemetry", "public-sector"],
+      "year": 2024,
+      "value_lkr": 82000000
+    },
+    {
+      "name": "North Port fuel depot spill remediation",
+      "tags": ["hazardous waste", "remediation", "emergency containment"],
+      "year": 2023,
+      "value_lkr": 125000000
+    },
+    {
+      "name": "Kurunegala industrial estate monitoring wells",
+      "tags": ["groundwater monitoring", "well installation", "sampling"],
+      "year": 2022,
+      "value_lkr": 46000000
+    }
+  ],
+  "staff_capacity": [
+    {
+      "role": "Proposal Lead",
+      "availability_pct": 65,
+      "notes": "Available for one medium bid in the next 30 days"
+    },
+    {
+      "role": "Technical Lead",
+      "availability_pct": 55,
+      "notes": "Supporting an active remediation mobilization"
+    },
+    {
+      "role": "Operations Manager",
+      "availability_pct": 40,
+      "notes": "Limited until current coastal cleanup contract hits stabilization"
+    },
+    {
+      "role": "QA Lead",
+      "availability_pct": 70,
+      "notes": "Available"
+    }
+  ]
+}

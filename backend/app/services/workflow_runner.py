@@ -1,0 +1,39 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+from backend.app.core.config import settings
+from backend.app.graph.workflow import build_workflow
+
+
+@dataclass(slots=True)
+class WorkflowRunner:
+    runtime_dir: str
+
+    def _invoke(self, *, query: str, input_paths: list[str], case_label: str) -> dict:
+        graph = build_workflow()
+        initial_state = {
+            'user_query': query,
+            'input_paths': input_paths,
+            'case_label': case_label,
+        }
+        result = graph.invoke(initial_state, config={'configurable': {'thread_id': case_label}})
+        return result.get('final_bundle') or result
+
+    def run_sample(self, sample_id: str, query: str) -> dict:
+        sample_dir = Path('data/sample_inputs') / sample_id
+        if not sample_dir.exists():
+            raise FileNotFoundError(f'Sample not found: {sample_id}')
+        input_paths = sorted(str(path) for path in sample_dir.iterdir() if path.is_file())
+        return self._invoke(query=query, input_paths=input_paths, case_label=sample_id)
+
+    def run_text_case(self, query: str, input_paths: list[str], case_label: str) -> dict:
+        return self._invoke(query=query, input_paths=input_paths, case_label=case_label)
+
+
+_runner = WorkflowRunner(runtime_dir=settings.runtime_dir)
+
+
+def get_runner() -> WorkflowRunner:
+    return _runner
