@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any, TypeVar
 
 from langchain_core.output_parsers import PydanticOutputParser
@@ -12,6 +13,8 @@ from backend.app.core.config import settings
 
 T = TypeVar('T', bound=BaseModel)
 
+logger = logging.getLogger(__name__)
+
 
 def build_chat_model(model: str | None = None) -> ChatOllama:
     """Create a local Ollama chat model for a specific agent."""
@@ -19,7 +22,7 @@ def build_chat_model(model: str | None = None) -> ChatOllama:
         model=model or settings.ollama_model,
         base_url=settings.ollama_base_url,
         temperature=settings.ollama_temperature,
-        num_ctx=32768,
+        num_ctx=2048,
     )
 
 
@@ -52,6 +55,7 @@ class StructuredLLM:
 
     def invoke(self, task: str, context: dict[str, Any]) -> T:
         chain = self.prompt | self.llm
+        logger.info('Running agent=%s model=%s', self.agent_name, self.model_name)
         message = chain.invoke(
             {
                 'system_prompt': self.system_prompt,
