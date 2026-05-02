@@ -15,16 +15,15 @@ class Settings:
     ollama_base_url: str = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
     ollama_temperature: float = float(os.getenv('OLLAMA_TEMPERATURE', '0.1'))
 
-    # Backward-compatible fallback used only when a specific agent model is not set.
+    # Default model used by every agent unless an agent-specific override is set.
     ollama_model: str = os.getenv('OLLAMA_MODEL', 'qwen2.5:7b')
 
-    # Per-agent local Ollama models. These keep the assignment zero-cost/local while
-    # showing that the MAS can route different reasoning jobs to different SLMs.
-    orchestrator_model: str = os.getenv('OLLAMA_ORCHESTRATOR_MODEL', 'gemma2:2b')
-    intake_model: str = os.getenv('OLLAMA_INTAKE_MODEL', 'qwen2.5:7b')
-    compliance_model: str = os.getenv('OLLAMA_COMPLIANCE_MODEL', 'llama3.1:8b')
-    risk_model: str = os.getenv('OLLAMA_RISK_MODEL', 'mistral:7b')
-    planner_model: str = os.getenv('OLLAMA_PLANNER_MODEL', 'phi3:mini')
+    # Optional per-agent local Ollama model overrides.
+    orchestrator_model: str = os.getenv('OLLAMA_ORCHESTRATOR_MODEL', ollama_model)
+    intake_model: str = os.getenv('OLLAMA_INTAKE_MODEL', ollama_model)
+    compliance_model: str = os.getenv('OLLAMA_COMPLIANCE_MODEL', ollama_model)
+    risk_model: str = os.getenv('OLLAMA_RISK_MODEL', ollama_model)
+    planner_model: str = os.getenv('OLLAMA_PLANNER_MODEL', ollama_model)
 
     langsmith_tracing: bool = os.getenv('LANGSMITH_TRACING', 'false').lower() == 'true'
     langsmith_project: str = os.getenv('LANGSMITH_PROJECT', 'ctse-remedai')
