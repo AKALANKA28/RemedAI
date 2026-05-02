@@ -14,7 +14,7 @@ from backend.app.tools.case_registry import register_case
 
 class OrchestratorAgent:
     def __init__(self) -> None:
-        self.chain = StructuredLLM(ORCHESTRATOR_PROMPT, OrchestratorDecision)
+        self.chain = StructuredLLM(ORCHESTRATOR_PROMPT, OrchestratorDecision, agent_name='orchestrator')
 
     @traceable(name='orchestrator_agent', run_type='chain')
     def run(self, user_query: str, input_paths: list[str], case_label: str) -> dict:
@@ -32,7 +32,12 @@ class OrchestratorAgent:
                 'registered_case': asdict(registered),
             },
         )
-        event = append_audit_event(registered.workspace_dir, 'orchestrator', 'decision', decision.model_dump())
+        event = append_audit_event(
+            registered.workspace_dir,
+            'orchestrator',
+            'decision',
+            {'model': self.chain.model_name, 'output': decision.model_dump()},
+        )
         return {
             'case_id': registered.case_id,
             'workspace_dir': registered.workspace_dir,

@@ -49,3 +49,20 @@ def test_planner_outputs_are_expected_after_full_run() -> None:
     assert len(result['plan']['tasks']) >= 4
     assert result['artifacts']['summary'].endswith('summary.md')
     assert result['artifacts']['submission_plan'].endswith('submission_plan.json')
+
+
+def test_env_example_assigns_distinct_agent_models() -> None:
+    env_text = Path('.env.example').read_text(encoding='utf-8')
+    expected_keys = [
+        'OLLAMA_ORCHESTRATOR_MODEL',
+        'OLLAMA_INTAKE_MODEL',
+        'OLLAMA_COMPLIANCE_MODEL',
+        'OLLAMA_RISK_MODEL',
+        'OLLAMA_PLANNER_MODEL',
+    ]
+    values = []
+    for key in expected_keys:
+        matching = [line for line in env_text.splitlines() if line.startswith(f'{key}=')]
+        assert matching, f'Missing {key} in .env.example'
+        values.append(matching[0].split('=', 1)[1].strip())
+    assert len(set(values)) == len(values)

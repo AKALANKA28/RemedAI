@@ -6,7 +6,7 @@ The system helps a small or mid-sized engineering firm decide whether to bid on 
 
 - 5 agents total: **1 orchestrator + 4 specialist agents**
 - LangGraph-based orchestration and stateful routing
-- LangChain-based prompting, parsing, and local Ollama model integration
+- LangChain-based prompting, parsing, and per-agent local Ollama model routing
 - Local tools for file ingestion, SQLite capability lookup, risk scoring, and artifact generation
 - LangSmith tracing plus local JSONL audit logs
 - FastAPI backend that can run without the frontend
@@ -23,13 +23,27 @@ Evaluate a tender package for a hazardous-site remediation and groundwater monit
 
 ## Stack
 
-- **Model runtime:** Ollama (default model: `qwen3:8b`)
+- **Model runtime:** Ollama with different local SLMs per agent
 - **Agent framework:** LangGraph + LangChain
 - **Tracing:** LangSmith + local JSONL audit trail
 - **Persistence:** LangGraph SQLite checkpointer
 - **Backend:** FastAPI
 - **Frontend:** Streamlit
 - **Data layer:** local SQLite + local seed files
+
+## Agent-specific model assignment
+
+RemedAI uses a different local Ollama model for each major agent instead of routing the full workflow through one model. The defaults are configurable in `.env`.
+
+| Agent | Default model | Why it is used |
+|---|---|---|
+| Orchestrator | `gemma2:2b` | Lightweight routing and objective framing |
+| Intake | `qwen2.5:7b` | Strong structured extraction from tender text |
+| Compliance | `llama3.1:8b` | Careful evidence comparison and gap analysis |
+| Risk | `mistral:7b` | Concise risk reasoning and recommendation wording |
+| Planner | `phi3:mini` | Fast, focused task-plan generation |
+
+The `/health` endpoint returns the active model map, and the local JSONL audit log records the model used by each agent.
 
 ## Repository layout
 
@@ -78,7 +92,7 @@ flowchart LR
 
 1. Create a virtual environment and install dependencies.
 2. Ensure Ollama is installed and running.
-3. Pull the default local model.
+3. Pull the required local models.
 4. Bootstrap the local seed database and runtime folders.
 5. Start the backend.
 6. Start the frontend.
@@ -88,7 +102,11 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-ollama pull qwen3:8b
+ollama pull gemma2:2b
+ollama pull qwen2.5:7b
+ollama pull llama3.1:8b
+ollama pull mistral:7b
+ollama pull phi3:mini
 python scripts/bootstrap.py
 uvicorn backend.app.main:app --reload --port 8000
 # in a second terminal
@@ -104,7 +122,9 @@ python scripts/run_sample_case.py --sample remediation_tender
 Or with HTTP after the backend is running:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/analyze/sample           -H "Content-Type: application/json"           -d '{"sample_id": "remediation_tender", "query": "Should we bid on this tender?"}'
+curl -X POST http://127.0.0.1:8000/api/v1/analyze/sample \
+  -H "Content-Type: application/json" \
+  -d '{"sample_id": "remediation_tender", "query": "Should we bid on this tender?"}'
 ```
 
 ## Sample case

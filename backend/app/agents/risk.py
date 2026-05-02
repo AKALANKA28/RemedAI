@@ -13,7 +13,7 @@ from backend.app.tools.risk_scoring import score_procurement_risk
 
 class RiskAgent:
     def __init__(self) -> None:
-        self.chain = StructuredLLM(RISK_PROMPT, RiskAssessment)
+        self.chain = StructuredLLM(RISK_PROMPT, RiskAssessment, agent_name='risk')
 
     @traceable(name='risk_agent', run_type='chain')
     def run(self, workspace_dir: str, parsed_tender: dict, compliance: dict) -> dict:
@@ -28,7 +28,12 @@ class RiskAgent:
                 'scored_signals': scored,
             },
         )
-        event = append_audit_event(workspace_dir, 'risk', 'assessment', assessment.model_dump())
+        event = append_audit_event(
+            workspace_dir,
+            'risk',
+            'assessment',
+            {'model': self.chain.model_name, 'output': assessment.model_dump()},
+        )
         return {
             'risk': assessment.model_dump(),
             'audit_trail': [event],

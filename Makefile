@@ -26,4 +26,10 @@ report:
 	$(PYTHON) scripts/generate_report.py
 
 zip:
-	cd .. && zip -r RemedAI_submission.zip RemedAI
+	cd .. && zip -r RemedAI_submission.zip RemedAI \
+		-x "RemedAI/runtime/*" \
+		-x "RemedAI/**/__pycache__/*" \
+		-x "RemedAI/.pytest_cache/*" \
+		-x "RemedAI/.mypy_cache/*" \
+		-x "RemedAI/.ruff_cache/*" \
+		-x "RemedAI/.env"

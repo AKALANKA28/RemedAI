@@ -11,7 +11,7 @@ from backend.app.tools.planning import build_submission_plan, write_case_outputs
 
 class PlannerAgent:
     def __init__(self) -> None:
-        self.chain = StructuredLLM(PLANNER_PROMPT, SubmissionPlan)
+        self.chain = StructuredLLM(PLANNER_PROMPT, SubmissionPlan, agent_name='planner')
 
     @traceable(name='planner_agent', run_type='chain')
     def run(
@@ -52,7 +52,12 @@ class PlannerAgent:
         )
         artifacts = write_case_outputs(workspace_dir, bundle.model_dump())
         enriched_bundle = bundle.model_copy(update={'artifacts': artifacts})
-        event = append_audit_event(workspace_dir, 'planner', 'final_bundle', enriched_bundle.model_dump())
+        event = append_audit_event(
+            workspace_dir,
+            'planner',
+            'final_bundle',
+            {'model': self.chain.model_name, 'output': enriched_bundle.model_dump()},
+        )
         final = enriched_bundle.model_dump()
         final['audit_trail'] = audit_trail + [event]
         artifacts = write_case_outputs(workspace_dir, final)

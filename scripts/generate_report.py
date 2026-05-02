@@ -73,7 +73,7 @@ def add_flow_table(doc: Document) -> None:
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         paragraph.runs[0].bold = True
     doc.add_paragraph(
-        'Each agent uses at least one custom Python tool, while LangGraph passes shared state and checkpoints between nodes.',
+        'Each agent uses at least one custom Python tool and a configurable local SLM, while LangGraph passes shared state and checkpoints between nodes.',
         style='Intense Quote',
     )
 
@@ -102,20 +102,47 @@ def add_agent_table(doc: Document) -> None:
     doc.add_paragraph()
 
 
+def add_model_table(doc: Document) -> None:
+    doc.add_paragraph('Agent-Specific Local Models', style='Heading 1')
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Light Grid Accent 1'
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    headers = ['Agent', 'Default Ollama model', 'Reason for assignment']
+    for idx, header in enumerate(headers):
+        table.cell(0, idx).text = header
+        shade_cell(table.cell(0, idx), 'E5EEF7')
+    rows = [
+        ('Orchestrator', 'gemma2:2b', 'Lightweight routing and objective framing'),
+        ('Intake', 'qwen2.5:7b', 'Structured extraction from tender text'),
+        ('Compliance', 'llama3.1:8b', 'Evidence comparison and gap analysis'),
+        ('Risk', 'mistral:7b', 'Risk reasoning and recommendation wording'),
+        ('Planner', 'phi3:mini', 'Fast task-plan generation'),
+    ]
+    for row in rows:
+        cells = table.add_row().cells
+        for idx, value in enumerate(row):
+            cells[idx].text = value
+            set_cell_margins(cells[idx])
+    doc.add_paragraph(
+        'The .env file can override each assignment through OLLAMA_ORCHESTRATOR_MODEL, OLLAMA_INTAKE_MODEL, OLLAMA_COMPLIANCE_MODEL, OLLAMA_RISK_MODEL, and OLLAMA_PLANNER_MODEL.',
+        style='Intense Quote',
+    )
+
+
 def build_report() -> Path:
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     doc = Document()
     section = doc.sections[0]
-    section.top_margin = Inches(0.7)
-    section.bottom_margin = Inches(0.7)
-    section.left_margin = Inches(0.8)
-    section.right_margin = Inches(0.8)
+    section.top_margin = Inches(0.55)
+    section.bottom_margin = Inches(0.55)
+    section.left_margin = Inches(0.72)
+    section.right_margin = Inches(0.72)
 
     styles = doc.styles
     styles['Normal'].font.name = 'Aptos'
-    styles['Normal'].font.size = Pt(10.5)
+    styles['Normal'].font.size = Pt(10)
     styles['Heading 1'].font.name = 'Aptos Display'
-    styles['Heading 1'].font.size = Pt(15)
+    styles['Heading 1'].font.size = Pt(14)
     styles['Heading 1'].font.color.rgb = RGBColor(17, 52, 86)
     styles['Heading 2'].font.name = 'Aptos Display'
     styles['Heading 2'].font.size = Pt(12)
@@ -132,13 +159,14 @@ def build_report() -> Path:
 
     add_flow_table(doc)
     add_agent_table(doc)
+    add_model_table(doc)
 
     doc.add_paragraph('2. Multi-Agent Architecture and Orchestration', style='Heading 1')
     doc.add_paragraph(
         'The workflow is implemented with LangGraph as a stateful directed graph. The Orchestrator Agent creates the case workspace and returns a routing decision. If the case is viable, the system proceeds sequentially through the Intake, Compliance, Risk, and Planner agents. This design intentionally keeps responsibilities distinct: extraction, evidence matching, risk interpretation, and planning are separated to reduce hallucination and make agent outputs easier to test.'
     )
     doc.add_paragraph(
-        'LangChain is used for prompt construction, output parsing, and local Ollama chat-model execution. Each agent uses a small structured-output wrapper built around a local ChatOllama model. The agents are configured with strict prompts that emphasize evidence-only reasoning, explicit ambiguity handling, and concise JSON outputs suitable for downstream state handoffs.'
+        'LangChain is used for prompt construction, output parsing, and local Ollama chat-model execution. Each agent uses a small structured-output wrapper built around ChatOllama, but the model is selected per agent instead of using one shared model. The default configuration assigns gemma2:2b to orchestration, qwen2.5:7b to intake extraction, llama3.1:8b to compliance reasoning, mistral:7b to risk analysis, and phi3:mini to planning. The prompts still emphasize evidence-only reasoning, ambiguity handling, and JSON outputs suitable for downstream state handoffs.'
     )
 
     doc.add_paragraph('3. State Management', style='Heading 1')
@@ -164,10 +192,10 @@ def build_report() -> Path:
 
     doc.add_paragraph('6. Deployment and Local Execution', style='Heading 1')
     doc.add_paragraph(
-        'The deployment model is intentionally simple so the markers can run it on a student machine without paid infrastructure. Ollama hosts the local model, FastAPI exposes the backend workflow, and Streamlit provides a demonstration UI. Runtime artifacts, LangGraph checkpoints, and output bundles are written to local folders. Because the assignment prohibits paid provider keys, all core reasoning is performed locally with an Ollama model and local tools.'
+        'The deployment model is intentionally simple so the markers can run it on a student machine without paid infrastructure. Ollama hosts the local models, FastAPI exposes the backend workflow, and Streamlit provides a demonstration UI. Runtime artifacts, LangGraph checkpoints, and output bundles are written to local folders. Because the assignment prohibits paid provider keys, all core reasoning is performed locally with Ollama models and local tools.'
     )
     doc.add_paragraph(
-        'The recommended default model is qwen3:8b because it offers strong agent-oriented behavior and tool-use capability for a small local footprint. However, the `.env` file allows the team to switch to llama3.1:8b or another Ollama-compatible model if lab hardware constraints require it. LangSmith tracing is optional at runtime; when not configured, the local JSONL audit trail still records each agent handoff and tool output.'
+        'The model map is intentionally mixed: gemma2:2b keeps the Orchestrator fast, qwen2.5:7b handles tender extraction, llama3.1:8b supports compliance analysis, mistral:7b supports risk synthesis, and phi3:mini keeps planning concise. The .env file allows the team to replace any of these with another Ollama-compatible model if lab hardware constraints require it. LangSmith tracing is optional at runtime; when not configured, the local JSONL audit trail still records each agent handoff, model assignment, and tool output.'
     )
 
     doc.add_paragraph('7. Results on the Seeded Case', style='Heading 1')

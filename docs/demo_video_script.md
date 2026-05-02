@@ -3,17 +3,19 @@
 ## 0:00-0:30 - Problem framing
 - Introduce RemedAI.
 - Explain that it is a local multi-agent system for environmental remediation tender qualification.
-- Mention Ollama, LangGraph, LangChain, and local tooling.
+- Mention Ollama, LangGraph, LangChain, local tools, and the new per-agent model setup.
 
 ## 0:30-1:10 - Show architecture
 - Open the README architecture section.
 - Explain the 5-agent flow: orchestrator -> intake -> compliance -> risk -> planner.
 - Mention one tool per agent and the SQLite state/tracing components.
+- Show the model table: Gemma for orchestration, Qwen for intake, Llama for compliance, Mistral for risk, and Phi for planning.
 
 ## 1:10-2:00 - Show backend only
 - Run `python scripts/run_sample_case.py --sample remediation_tender`.
 - Point out the generated recommendation, risks, and artifacts.
 - Open `runtime/outputs/<case_id>/summary.md` and `audit.jsonl`.
+- Highlight that each audit event includes the agent model used.
 
 ## 2:00-3:20 - Show frontend
 - Start the Streamlit UI.
@@ -28,4 +30,4 @@
 
 ## 4:20-4:50 - Close
 - Summarize why the chosen problem is useful and non-generic.
-- Highlight local privacy, structured state handoffs, and team contribution mapping.
+- Highlight local privacy, structured state handoffs, per-agent SLM selection, and team contribution mapping.

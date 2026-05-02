@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
+from backend.app.core.config import settings
 from backend.app.models.schemas import AnalyzeSampleRequest, AnalyzeTextRequest
 from backend.app.services.workflow_runner import get_runner
 
@@ -12,8 +14,8 @@ router = APIRouter()
 
 
 @router.get('/health')
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict[str, Any]:
+    return {"status": "ok", "agent_models": settings.agent_model_map()}
 
 
 @router.post('/api/v1/analyze/sample')

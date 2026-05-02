@@ -12,7 +12,7 @@ from backend.app.tools.capability_lookup import query_capability_catalog
 
 class ComplianceAgent:
     def __init__(self) -> None:
-        self.chain = StructuredLLM(COMPLIANCE_PROMPT, ComplianceAssessment)
+        self.chain = StructuredLLM(COMPLIANCE_PROMPT, ComplianceAssessment, agent_name='compliance')
 
     @traceable(name='compliance_agent', run_type='chain')
     def run(self, workspace_dir: str, parsed_tender: dict) -> dict:
@@ -35,7 +35,12 @@ class ComplianceAgent:
                 ],
             },
         )
-        event = append_audit_event(workspace_dir, 'compliance', 'assessment', assessment.model_dump())
+        event = append_audit_event(
+            workspace_dir,
+            'compliance',
+            'assessment',
+            {'model': self.chain.model_name, 'output': assessment.model_dump()},
+        )
         return {
             'compliance': assessment.model_dump(),
             'audit_trail': [event],

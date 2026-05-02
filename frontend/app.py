@@ -35,6 +35,12 @@ with st.sidebar:
     query = st.text_area('User objective', value='Should we bid on this tender?')
     run_button = st.button('Run analysis', type='primary', use_container_width=True)
     st.markdown('<p class="small-note">Backend must be running on port 8000.</p>', unsafe_allow_html=True)
+    try:
+        health = requests.get(f'{BACKEND_URL}/health', timeout=3).json()
+        st.caption('Active local models')
+        st.json(health.get('agent_models', {}))
+    except requests.RequestException:
+        st.caption('Model map appears after the backend starts.')
 
 if run_button:
     with st.spinner('Running 5-agent workflow...'):
