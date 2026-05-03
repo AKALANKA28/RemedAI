@@ -16,6 +16,12 @@ class AnalyzeTextRequest(BaseModel):
     case_label: str = Field(default='manual_case')
 
 
+class AnalyzeTenderUrlRequest(BaseModel):
+    source: Literal['waterboard'] = 'waterboard'
+    tender_url: str = Field(default='https://www.waterboard.lk/tenders/')
+    query: str = Field(default='Should we bid on this tender?')
+
+
 class OrchestratorDecision(BaseModel):
     objective: str
     route: Literal['continue', 'clarify'] = 'continue'

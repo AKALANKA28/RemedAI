@@ -135,4 +135,5 @@ def write_case_outputs(workspace_dir: str, final_bundle: dict[str, Any]) -> dict
         'compliance_matrix': str(compliance_path),
         'risk_register': str(risk_path),
         'submission_plan': str(plan_path),
+        'audit_log': str(workspace / 'audit.jsonl'),
     }

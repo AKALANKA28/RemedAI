@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _split_env_list(value: str) -> list[str]:
+    return [item.strip() for item in value.split(',') if item.strip()]
 
 
 @dataclass(slots=True)
@@ -26,6 +30,9 @@ class Settings:
     compliance_model: str = os.getenv('OLLAMA_COMPLIANCE_MODEL', ollama_model)
     risk_model: str = os.getenv('OLLAMA_RISK_MODEL', ollama_model)
     planner_model: str = os.getenv('OLLAMA_PLANNER_MODEL', ollama_model)
+    ollama_fallback_models: list[str] = field(
+        default_factory=lambda: _split_env_list(os.getenv('OLLAMA_FALLBACK_MODELS', ''))
+    )
 
     langsmith_tracing: bool = os.getenv('LANGSMITH_TRACING', 'false').lower() == 'true'
     langsmith_project: str = os.getenv('LANGSMITH_PROJECT', 'ctse-remedai')

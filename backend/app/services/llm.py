@@ -9,8 +9,17 @@ from langchain_ollama import ChatOllama
 from pydantic import BaseModel
 
 from backend.app.core.config import settings
+from backend.app.services.logging_utils import get_app_logger
 
 T = TypeVar('T', bound=BaseModel)
+logger = get_app_logger('llm')
+
+
+class ModelInvocationError(RuntimeError):
+    def __init__(self, agent_name: str, model_name: str, message: str):
+        self.agent_name = agent_name
+        self.model_name = model_name
+        super().__init__(message)
 
 
 def build_chat_model(model: str | None = None) -> ChatOllama:
@@ -52,15 +61,44 @@ class StructuredLLM:
         )
 
     def invoke(self, task: str, context: dict[str, Any]) -> T:
-        chain = self.prompt | self.llm
-        message = chain.invoke(
-            {
-                'system_prompt': self.system_prompt,
-                'format_instructions': self.parser.get_format_instructions(),
-                'model_name': self.model_name,
-                'task': task,
-                'context_json': json.dumps(context, ensure_ascii=False, indent=2),
-            }
-        )
-        text = getattr(message, 'content', str(message))
-        return self.parser.parse(text)
+        context_json = json.dumps(context, ensure_ascii=False, indent=2)
+        candidates = [self.model_name]
+        for fallback in settings.ollama_fallback_models:
+            if fallback not in candidates:
+                candidates.append(fallback)
+        last_exc: Exception | None = None
+
+        for model_name in candidates:
+            llm = build_chat_model(model_name)
+            chain = self.prompt | llm
+            logger.info(
+                'LLM start agent=%s model=%s context_chars=%s task=%s',
+                self.agent_name,
+                model_name,
+                len(context_json),
+                task,
+            )
+            try:
+                message = chain.invoke(
+                    {
+                        'system_prompt': self.system_prompt,
+                        'format_instructions': self.parser.get_format_instructions(),
+                        'model_name': model_name,
+                        'task': task,
+                        'context_json': context_json,
+                    }
+                )
+                text = getattr(message, 'content', str(message))
+                parsed = self.parser.parse(text)
+                if model_name != self.model_name:
+                    logger.warning('LLM fallback success agent=%s model=%s', self.agent_name, model_name)
+                    self.model_name = model_name
+                    self.llm = llm
+                else:
+                    logger.info('LLM success agent=%s model=%s', self.agent_name, model_name)
+                return parsed
+            except Exception as exc:
+                last_exc = exc
+                logger.exception('LLM failed agent=%s model=%s error=%s', self.agent_name, model_name, exc)
+
+        raise ModelInvocationError(self.agent_name, self.model_name, str(last_exc) if last_exc else 'LLM failed')

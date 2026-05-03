@@ -4,9 +4,12 @@ from langsmith import traceable
 
 from backend.app.models.schemas import FinalBundle, SubmissionPlan
 from backend.app.prompts import PLANNER_PROMPT
-from backend.app.services.llm import StructuredLLM
+from backend.app.services.llm import ModelInvocationError, StructuredLLM
+from backend.app.services.logging_utils import get_app_logger
 from backend.app.services.observability import append_audit_event
 from backend.app.tools.planning import build_submission_plan, write_case_outputs
+
+logger = get_app_logger('agent.planner')
 
 
 class PlannerAgent:
@@ -23,16 +26,21 @@ class PlannerAgent:
         risk: dict,
         audit_trail: list[dict],
     ) -> dict:
+        logger.info('Planner start case_id=%s', case_id)
         raw_plan = build_submission_plan(parsed_tender, compliance, risk)
-        plan = self.chain.invoke(
-            task='Create the final submission plan for the bid team.',
-            context={
-                'parsed_tender': parsed_tender,
-                'compliance': compliance,
-                'risk': risk,
-                'raw_plan': raw_plan,
-            },
-        )
+        try:
+            plan = self.chain.invoke(
+                task='Create the final submission plan for the bid team.',
+                context={
+                    'parsed_tender': parsed_tender,
+                    'compliance': compliance,
+                    'risk': risk,
+                    'raw_plan': raw_plan,
+                },
+            )
+        except ModelInvocationError as exc:
+            logger.warning('Planner LLM unavailable; using deterministic plan: %s', exc)
+            plan = SubmissionPlan.model_validate(raw_plan)
         summary = (
             f"Recommendation: {risk['recommendation']}. "
             f"Coverage ratio: {compliance['coverage_ratio']}. "
@@ -62,6 +70,7 @@ class PlannerAgent:
         final['audit_trail'] = audit_trail + [event]
         artifacts = write_case_outputs(workspace_dir, final)
         final['artifacts'] = artifacts
+        logger.info('Planner complete case_id=%s artifacts=%s', case_id, len(artifacts))
         return {
             'plan': plan.model_dump(),
             'artifacts': artifacts,

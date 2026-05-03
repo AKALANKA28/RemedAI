@@ -11,6 +11,10 @@ from docx import Document
 from langsmith import traceable
 from pypdf import PdfReader
 
+from backend.app.services.logging_utils import get_app_logger
+
+logger = get_app_logger('tool.document_ingestion')
+
 
 @dataclass(slots=True)
 class ExtractedDocument:
@@ -18,7 +22,7 @@ class ExtractedDocument:
     text: str
 
 
-DATE_FORMATS = ('%Y-%m-%d', '%d %B %Y', '%d %b %Y')
+DATE_FORMATS = ('%Y-%m-%d', '%d-%m-%Y', '%d %B %Y', '%d %b %Y')
 
 
 def _read_text_file(path: Path) -> str:
@@ -86,15 +90,53 @@ def _extract_section_lines(text: str, heading: str) -> list[str]:
     return [line.strip('- ').strip() for line in block.splitlines() if line.strip().startswith('-')]
 
 
+def _infer_requirements_from_text(text: str) -> list[dict[str, Any]]:
+    candidate_lines: list[str] = []
+    requirement_terms = (
+        'shall',
+        'must',
+        'required',
+        'eligible',
+        'qualification',
+        'experience',
+        'submission',
+        'bidder',
+        'tenderer',
+        'documents',
+    )
+    for raw_line in text.splitlines():
+        line = ' '.join(raw_line.split())
+        lowered = line.lower()
+        if 35 <= len(line) <= 240 and any(term in lowered for term in requirement_terms):
+            candidate_lines.append(line)
+        if len(candidate_lines) >= 8:
+            break
+
+    if not candidate_lines:
+        candidate_lines = ['Manual review of the official tender notice is required before bidding.']
+
+    return [
+        {
+            'requirement_id': f'REQ-{index:02d}',
+            'text': line,
+            'mandatory': True,
+            'category': 'general',
+            'evidence_needed': 'Evidence or statement proving this requirement can be delivered.',
+        }
+        for index, line in enumerate(candidate_lines, start=1)
+    ]
+
+
 @traceable(name='parse_tender_package', run_type='tool')
 def parse_tender_package(input_paths: list[str]) -> dict[str, Any]:
     """Extract key tender fields from a local package of markdown, text, docx, or pdf files."""
+    logger.info('Parse tender package start files=%s', len(input_paths))
     documents = [extract_text_from_path(path) for path in input_paths]
     combined = '\n\n'.join(doc.text for doc in documents)
-    title_match = re.search(r'Project title:\*\*?\s*(.+)', combined, flags=re.IGNORECASE)
-    issuer_match = re.search(r'Issuer:\*\*?\s*(.+)', combined, flags=re.IGNORECASE)
-    deadline_match = re.search(r'Submission deadline:\*\*?\s*(.+)', combined, flags=re.IGNORECASE)
-    duration_match = re.search(r'Contract duration:\*\*?\s*(\d+)\s*months?', combined, flags=re.IGNORECASE)
+    title_match = re.search(r'\*{0,2}Project title:\*{0,2}\s*(.+)', combined, flags=re.IGNORECASE)
+    issuer_match = re.search(r'\*{0,2}Issuer:\*{0,2}\s*(.+)', combined, flags=re.IGNORECASE)
+    deadline_match = re.search(r'\*{0,2}Submission deadline:\*{0,2}\s*(.+)', combined, flags=re.IGNORECASE)
+    duration_match = re.search(r'\*{0,2}Contract duration:\*{0,2}\s*(\d+)\s*months?', combined, flags=re.IGNORECASE)
     requirements: list[dict[str, Any]] = []
     for line in _extract_section_lines(combined, 'Mandatory Requirements'):
         req_match = re.match(r'(REQ-\d+):\s*(.+)', line)
@@ -122,8 +164,10 @@ def parse_tender_package(input_paths: list[str]) -> dict[str, Any]:
                 'evidence_needed': 'Evidence or statement proving this requirement can be delivered.',
             }
         )
+    if not requirements:
+        requirements = _infer_requirements_from_text(combined)
     scope_lines = _extract_section_lines(combined, 'Scope of Work')
-    return {
+    payload = {
         'documents': [{'path': doc.path, 'chars': len(doc.text)} for doc in documents],
         'raw_text_excerpt': combined[:3500],
         'project_title': title_match.group(1).strip().strip('* ').strip() if title_match else 'Unknown project',
@@ -136,3 +180,11 @@ def parse_tender_package(input_paths: list[str]) -> dict[str, Any]:
         'scope_summary': scope_lines,
         'ambiguities': _extract_section_lines(combined, 'Clarifications'),
     }
+    logger.info(
+        'Parse tender package complete title=%s docs=%s requirements=%s chars=%s',
+        payload['project_title'],
+        len(documents),
+        len(requirements),
+        len(combined),
+    )
+    return payload

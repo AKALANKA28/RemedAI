@@ -113,6 +113,8 @@ uvicorn backend.app.main:app --reload --port 8000
 streamlit run frontend/app.py
 ```
 
+The Streamlit app accepts an official Ministry of Health tender URL. If you paste the tender list page, RemedAI selects the first downloadable notice, saves it under `runtime/fetched_tenders/`, and runs the same agent workflow against the local files.
+
 ## Backend-only usage
 
 ```bash
@@ -125,6 +127,14 @@ Or with HTTP after the backend is running:
 curl -X POST http://127.0.0.1:8000/api/v1/analyze/sample \
   -H "Content-Type: application/json" \
   -d '{"sample_id": "remediation_tender", "query": "Should we bid on this tender?"}'
+```
+
+Analyze an official Ministry of Health tender URL:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/analyze/url \
+  -H "Content-Type: application/json" \
+  -d '{"source": "ministry_of_health", "tender_url": "https://www.health.gov.lk/tenders-procuments/", "query": "Should we bid on this tender?"}'
 ```
 
 ## Sample case
