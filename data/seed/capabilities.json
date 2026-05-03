@@ -3,42 +3,74 @@
     {
       "name": "Steel roof structures for water tanks",
       "category": "technical",
-      "tags": ["steel roof", "water tanks", "structural fabrication", "installation"],
+      "tags": [
+        "steel roof",
+        "water tanks",
+        "structural fabrication",
+        "installation"
+      ],
       "evidence": "Fabricated and installed steel roof structures for two elevated tanks under a provincial water supply upgrade in 2024.",
       "owner": "Civil Lead"
     },
     {
       "name": "Water treatment plant civil upgrades",
       "category": "technical",
-      "tags": ["water treatment plant", "civil works", "building construction", "expansion"],
+      "tags": [
+        "water treatment plant",
+        "civil works",
+        "building construction",
+        "expansion"
+      ],
       "evidence": "Completed civil expansion works at a regional water treatment plant including structural slab and utility corridors.",
       "owner": "Civil Lead"
     },
     {
       "name": "HDPE/DI pipe laying and leak repairs",
       "category": "technical",
-      "tags": ["hdpe", "di pipes", "pipeline", "leak repair", "distribution lines"],
+      "tags": [
+        "hdpe",
+        "di pipes",
+        "pipeline",
+        "leak repair",
+        "distribution lines"
+      ],
       "evidence": "Delivered HDPE and DI pipe installation with valve chambers and leak rectification for district distribution networks.",
       "owner": "Pipeline Supervisor"
     },
     {
       "name": "Catchment area fencing works",
       "category": "operations",
-      "tags": ["chain link fence", "barbed wire", "catchment area", "site security"],
+      "tags": [
+        "chain link fence",
+        "barbed wire",
+        "catchment area",
+        "site security"
+      ],
       "evidence": "Installed chain-link and barbed-wire fencing for catchment protection at three intake sites.",
       "owner": "Operations Manager"
     },
     {
       "name": "Pump and VFD installation and commissioning",
       "category": "technical",
-      "tags": ["pump", "vfd", "variable frequency drive", "commissioning", "m&e"],
+      "tags": [
+        "pump",
+        "vfd",
+        "variable frequency drive",
+        "commissioning",
+        "m&e"
+      ],
       "evidence": "Installed high-lift pumps with VFD panels and completed commissioning for a coastal water supply scheme.",
       "owner": "M&E Engineer"
     },
     {
       "name": "Alum dosing systems and chemical handling",
       "category": "technical",
-      "tags": ["alum dosing", "chemical dosing", "aluminium sulphate", "treatment"],
+      "tags": [
+        "alum dosing",
+        "chemical dosing",
+        "aluminium sulphate",
+        "treatment"
+      ],
       "evidence": "Supplied and installed alum dosing skids with calibrated pumps and safety handling procedures.",
       "owner": "Process Engineer"
     },
