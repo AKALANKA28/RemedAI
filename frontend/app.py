@@ -33,14 +33,8 @@ with st.sidebar:
     st.header('Run settings')
     sample_id = st.selectbox('Sample tender', ['remediation_tender'])
     query = st.text_area('User objective', value='Should we bid on this tender?')
-    run_button = st.button('Run analysis', type='primary', use_container_width=True)
+    run_button = st.button('Run analysis', type='primary', width='stretch')
     st.markdown('<p class="small-note">Backend must be running on port 8000.</p>', unsafe_allow_html=True)
-    try:
-        health = requests.get(f'{BACKEND_URL}/health', timeout=3).json()
-        st.caption('Active local models')
-        st.json(health.get('agent_models', {}))
-    except requests.RequestException:
-        st.caption('Model map appears after the backend starts.')
 
 if run_button:
     with st.spinner('Running 5-agent workflow...'):
@@ -65,25 +59,32 @@ if result:
     with tab1:
         st.subheader(result['project_title'])
         st.write(result['summary'])
-        st.json(result['artifacts'])
+        st.write(result['artifacts'])
 
     with tab2:
         df = pd.DataFrame(result['compliance']['rows'])
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(df, width='stretch')
 
     with tab3:
         risk_df = pd.DataFrame(result['risk']['risks'])
-        st.dataframe(risk_df, use_container_width=True)
+        st.dataframe(risk_df, width='stretch')
         st.write('Rationale:')
         for reason in result['risk']['rationale']:
             st.markdown(f'- {reason}')
 
     with tab4:
         plan_df = pd.DataFrame(result['plan']['tasks'])
-        st.dataframe(plan_df, use_container_width=True)
+        st.dataframe(plan_df, width='stretch')
         st.subheader('Agent audit trail')
         for event in result['audit_trail']:
             with st.expander(f"{event['agent']} - {event['stage']}"):
-                st.json(event['payload'])
+                payload = event.get('payload', {})
+                st.write(
+                    {
+                        key: value
+                        for key, value in payload.items()
+                        if key in {'model', 'decision', 'recommendation', 'overall_risk', 'case_id'}
+                    }
+                )
 else:
     st.info('Select the sample tender and click Run analysis.')

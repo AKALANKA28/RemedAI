@@ -14,9 +14,11 @@ class Settings:
     project_name: str = 'RemedAI'
     ollama_base_url: str = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
     ollama_temperature: float = float(os.getenv('OLLAMA_TEMPERATURE', '0.1'))
+    ollama_context_length: int = int(os.getenv('OLLAMA_CONTEXT_LENGTH', '2048'))
+    ollama_keep_alive: str | int = os.getenv('OLLAMA_KEEP_ALIVE', '0')
 
     # Default model used by every agent unless an agent-specific override is set.
-    ollama_model: str = os.getenv('OLLAMA_MODEL', 'qwen2.5:7b')
+    ollama_model: str = os.getenv('OLLAMA_MODEL', 'phi3:mini')
 
     # Optional per-agent local Ollama model overrides.
     orchestrator_model: str = os.getenv('OLLAMA_ORCHESTRATOR_MODEL', ollama_model)

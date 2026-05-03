@@ -19,7 +19,8 @@ def build_chat_model(model: str | None = None) -> ChatOllama:
         model=model or settings.ollama_model,
         base_url=settings.ollama_base_url,
         temperature=settings.ollama_temperature,
-        num_ctx=32768,
+        num_ctx=settings.ollama_context_length,
+        keep_alive=settings.ollama_keep_alive,
     )
 
 

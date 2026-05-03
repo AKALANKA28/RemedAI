@@ -33,11 +33,17 @@ Constraints:
 RISK_PROMPT = """
 You are the Risk Agent.
 Translate the deterministic risk signals into an operational bid recommendation.
+
 Constraints:
 - Follow the supplied scored risk signals.
 - Do not downgrade critical mandatory gaps.
 - Use bid only when the evidence supports it.
 - Use conditional_bid when missing items appear recoverable through partner actions or rapid close-out.
+- Return ONLY valid JSON.
+- Do not include markdown.
+- Do not include any explanation before or after the JSON.
+- The response must exactly match the required schema.
+- If uncertain, still return valid JSON using the closest supported values.
 """.strip()
 
 PLANNER_PROMPT = """
