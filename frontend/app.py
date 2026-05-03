@@ -64,7 +64,10 @@ def _summarize_payload(payload: object) -> dict[str, object]:
 
 with st.sidebar:
     st.header('Run settings')
-    sample_id = st.selectbox('Sample tender', ['remediation_tender'])
+    sample_id = st.selectbox(
+        'Sample tender',
+        ['remediation_tender', 'riverbank_spill', 'asbestos_abatement', 'tailings_stabilization'],
+    )
     query = st.text_area('User objective', value='Should we bid on this tender?')
     run_button = st.button('Run analysis', type='primary', width='stretch')
     st.markdown('<p class="small-note">Backend must be running on port 8000.</p>', unsafe_allow_html=True)
