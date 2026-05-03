@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from langchain_core.exceptions import OutputParserException
 from langsmith import traceable
 
 from backend.app.models.schemas import FinalBundle, SubmissionPlan
@@ -24,15 +25,20 @@ class PlannerAgent:
         audit_trail: list[dict],
     ) -> dict:
         raw_plan = build_submission_plan(parsed_tender, compliance, risk)
-        plan = self.chain.invoke(
-            task='Create the final submission plan for the bid team.',
-            context={
-                'parsed_tender': parsed_tender,
-                'compliance': compliance,
-                'risk': risk,
-                'raw_plan': raw_plan,
-            },
-        )
+        try:
+            plan = self.chain.invoke(
+                task='Create the final submission plan for the bid team.',
+                context={
+                    'parsed_tender': parsed_tender,
+                    'compliance': compliance,
+                    'risk': risk,
+                    'raw_plan': raw_plan,
+                },
+            )
+            model_name = self.chain.model_name
+        except OutputParserException:
+            plan = SubmissionPlan(**raw_plan)
+            model_name = 'fallback-extractor'
         summary = (
             f"Recommendation: {risk['recommendation']}. "
             f"Coverage ratio: {compliance['coverage_ratio']}. "
@@ -56,7 +62,7 @@ class PlannerAgent:
             workspace_dir,
             'planner',
             'final_bundle',
-            {'model': self.chain.model_name, 'output': enriched_bundle.model_dump()},
+            {'model': model_name, 'output': enriched_bundle.model_dump()},
         )
         final = enriched_bundle.model_dump()
         final['audit_trail'] = audit_trail + [event]

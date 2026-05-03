@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from langchain_core.exceptions import OutputParserException
 from langsmith import traceable
 
 from backend.app.core.config import settings
@@ -23,23 +24,34 @@ class ComplianceAgent:
             fully_met = sum(1 for row in rows if row['status'] == 'fully_met')
             partially_met = sum(1 for row in rows if row['status'] == 'partially_met')
             coverage_ratio = round((fully_met + 0.5 * partially_met) / len(rows), 2)
-        assessment = self.chain.invoke(
-            task='Produce the final compliance assessment using the evidence-backed match rows.',
-            context={
-                'tender': parsed_tender,
-                'coverage_ratio': coverage_ratio,
-                'mandatory_gaps': mandatory_gaps,
-                'rows': rows,
-                'confidence_notes': [
-                    'The matching step is lexical and evidence-based; ambiguous domain synonyms may require reviewer confirmation.'
-                ],
-            },
-        )
+        confidence_notes = [
+            'The matching step is lexical and evidence-based; ambiguous domain synonyms may require reviewer confirmation.'
+        ]
+        try:
+            assessment = self.chain.invoke(
+                task='Produce the final compliance assessment using the evidence-backed match rows.',
+                context={
+                    'tender': parsed_tender,
+                    'coverage_ratio': coverage_ratio,
+                    'mandatory_gaps': mandatory_gaps,
+                    'rows': rows,
+                    'confidence_notes': confidence_notes,
+                },
+            )
+            model_name = self.chain.model_name
+        except OutputParserException:
+            assessment = ComplianceAssessment(
+                coverage_ratio=coverage_ratio,
+                mandatory_gaps=mandatory_gaps,
+                rows=rows,
+                confidence_notes=confidence_notes,
+            )
+            model_name = 'fallback-extractor'
         event = append_audit_event(
             workspace_dir,
             'compliance',
             'assessment',
-            {'model': self.chain.model_name, 'output': assessment.model_dump()},
+            {'model': model_name, 'output': assessment.model_dump()},
         )
         return {
             'compliance': assessment.model_dump(),

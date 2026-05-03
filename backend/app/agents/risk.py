@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from langchain_core.exceptions import OutputParserException
 from langsmith import traceable
 
 from backend.app.core.config import settings
@@ -19,20 +20,25 @@ class RiskAgent:
     def run(self, workspace_dir: str, parsed_tender: dict, compliance: dict) -> dict:
         capacity = get_capacity_snapshot(settings.case_db_path)
         scored = score_procurement_risk(parsed_tender, compliance['rows'], capacity)
-        assessment = self.chain.invoke(
-            task='Convert the deterministic risk signals into a concise bid recommendation and risk register.',
-            context={
-                'parsed_tender': parsed_tender,
-                'compliance': compliance,
-                'capacity_snapshot': capacity,
-                'scored_signals': scored,
-            },
-        )
+        try:
+            assessment = self.chain.invoke(
+                task='Convert the deterministic risk signals into a concise bid recommendation and risk register.',
+                context={
+                    'parsed_tender': parsed_tender,
+                    'compliance': compliance,
+                    'capacity_snapshot': capacity,
+                    'scored_signals': scored,
+                },
+            )
+            model_name = self.chain.model_name
+        except OutputParserException:
+            assessment = RiskAssessment(**scored)
+            model_name = 'fallback-extractor'
         event = append_audit_event(
             workspace_dir,
             'risk',
             'assessment',
-            {'model': self.chain.model_name, 'output': assessment.model_dump()},
+            {'model': model_name, 'output': assessment.model_dump()},
         )
         return {
             'risk': assessment.model_dump(),

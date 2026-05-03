@@ -129,10 +129,16 @@ def write_case_outputs(workspace_dir: str, final_bundle: dict[str, Any]) -> dict
     plan_path = workspace / 'submission_plan.json'
     plan_path.write_text(json.dumps(final_bundle['plan'], indent=2), encoding='utf-8')
 
-    return {
+    artifacts = {
         'final_bundle': str(final_bundle_path),
         'summary': str(summary_path),
         'compliance_matrix': str(compliance_path),
         'risk_register': str(risk_path),
         'submission_plan': str(plan_path),
     }
+
+    audit_path = workspace / 'audit.jsonl'
+    if audit_path.exists():
+        artifacts['audit_log'] = str(audit_path)
+
+    return artifacts

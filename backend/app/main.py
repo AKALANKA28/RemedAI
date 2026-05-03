@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.routes import router
 from backend.app.core.config import settings
+from backend.app.core.logging import configure_logging
+
+configure_logging()
 
 app = FastAPI(
     title=settings.project_name,

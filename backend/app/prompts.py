@@ -8,6 +8,8 @@ Constraints:
 - Do not invent missing files or evidence.
 - Keep reasoning concise and operational.
 - Assume downstream agents will handle extraction, compliance, risk, and planning.
+- Return ONLY a single JSON object that matches the required schema.
+- Do not include markdown, code fences, or any commentary before/after the JSON.
 """.strip()
 
 INTAKE_PROMPT = """
@@ -18,6 +20,8 @@ Constraints:
 - Preserve deadlines and budget exactly when available.
 - If something is unclear, place it in ambiguities instead of guessing.
 - Categorize requirements into certification, experience, operations, quality, technical, or general.
+- Return ONLY a single JSON object that matches the required schema.
+- Do not include markdown, code fences, or any commentary before/after the JSON.
 """.strip()
 
 COMPLIANCE_PROMPT = """
@@ -28,6 +32,8 @@ Constraints:
 - Mark partially_met when the requirement may be satisfied only through a partner, renewal, or clarification.
 - Quote supporting evidence briefly and concretely.
 - Never exaggerate company readiness.
+- Return ONLY a single JSON object that matches the required schema.
+- Do not include markdown, code fences, or any commentary before/after the JSON.
 """.strip()
 
 RISK_PROMPT = """
@@ -40,7 +46,7 @@ Constraints:
 - Use bid only when the evidence supports it.
 - Use conditional_bid when missing items appear recoverable through partner actions or rapid close-out.
 - Return ONLY valid JSON.
-- Do not include markdown.
+- Do not include markdown or code fences.
 - Do not include any explanation before or after the JSON.
 - The response must exactly match the required schema.
 - If uncertain, still return valid JSON using the closest supported values.
@@ -54,4 +60,6 @@ Constraints:
 - Make owners realistic.
 - Prefer short, specific action items over generic project-management language.
 - The executive summary must be suitable for a proposal director.
+- Return ONLY a single JSON object that matches the required schema.
+- Do not include markdown, code fences, or any commentary before/after the JSON.
 """.strip()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from pathlib import Path
 
 from langsmith import traceable
 
@@ -24,19 +25,46 @@ class OrchestratorAgent:
             runtime_dir=settings.runtime_dir,
             case_label=case_label,
         )
-        decision = self.chain.invoke(
-            task='Decide whether the tender analysis workflow can proceed.',
-            context={
-                'user_query': user_query,
-                'input_paths': input_paths,
-                'registered_case': asdict(registered),
-            },
-        )
+        missing_paths = [path for path in input_paths if not Path(path).exists()]
+        if not input_paths or missing_paths:
+            rationale: list[str] = []
+            required_inputs: list[str] = []
+            questions: list[str] = []
+            if not input_paths:
+                rationale.append('No input documents were provided.')
+                required_inputs.extend(
+                    [
+                        'Project Scope of Work document (scope_of_work.md)',
+                        'Tender Notice document (tender_notice.md)',
+                    ]
+                )
+                questions.append('Please provide the tender scope and notice documents.')
+            if missing_paths:
+                rationale.append(f"Some input paths do not exist: {', '.join(missing_paths)}")
+                required_inputs.extend(missing_paths)
+                questions.append('Please confirm the correct file paths for the tender documents.')
+            decision = OrchestratorDecision(
+                objective=f'Assess bid feasibility for: {user_query}',
+                route='clarify',
+                proceed=False,
+                rationale=rationale,
+                required_inputs=required_inputs,
+                clarification_questions=questions,
+            )
+            model_name = 'rule-based'
+        else:
+            decision = OrchestratorDecision(
+                objective=f'Assess bid feasibility for: {user_query}',
+                route='continue',
+                proceed=True,
+                rationale=['Input documents were found; proceeding with intake.'],
+            )
+            model_name = 'rule-based'
         event = append_audit_event(
             registered.workspace_dir,
             'orchestrator',
             'decision',
-            {'model': self.chain.model_name, 'output': decision.model_dump()},
+            {'model': model_name, 'output': decision.model_dump()},
         )
         return {
             'case_id': registered.case_id,
