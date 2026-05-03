@@ -12,5 +12,6 @@ The frontend is a Streamlit app that calls the backend API and renders:
 Start it with:
 
 ```bash
-streamlit run frontend/app.py
+streamlit run
+ frontend/app.py
 ```
